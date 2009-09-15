@@ -12,25 +12,25 @@ module PermalinkFu
 
     # This method does the actual permalink escaping.
     def escape(string)
-      result = ((translation_to && translation_from) ? Iconv.iconv(translation_to, translation_from, string) : string).to_s
+			
+			#First because flash encoding problems
+			string.gsub!(/[àáâãäå]/i,'a')
+			string.gsub!(/[èéêë]/i,'e')
+			string.gsub!(/[íìîï]/i,'i')
+			string.gsub!(/[óòôöõ]/i,'o')
+			string.gsub!(/[úùûü]/i,'u')
+			string.gsub!(/æ/i,'ae')
+			string.gsub!(/ç/i, 'c') 
+			string.gsub!(/ñ/i, 'n') 
+
+      result = ((translation_to && translation_from) ? Iconv.iconv(translation_to, translation_from, 
+string) : string).to_s
+			
+			result.gsub!(/[^\x00-\x7F]+/, '') # Remove anything non-ASCII entirely (e.g. diacritics).
+      result.gsub!(/[^\w_ \-]+/i,   '') # Remove unwanted chars.
+      result.gsub!(/[ \-]+/i,      '-') # No more than one of the separator in a row.
+      result.gsub!(/^\-|\-$/i,      '') # Remove leading/trailing separator.
 			result.downcase!
-		#Remove Latin characters
-			result.gsub!(/[àáâãäå]/i,'a')
-			result.gsub!(/[èéêë]/i,'e')
-			result.gsub!(/[íìîï]/i,'i')
-			result.gsub!(/[óòôöõ]/i,'o')
-			result.gsub!(/[úùûü]/i,'u')
-			result.gsub!(/æ/i,'ae')
-			result.gsub!(/ç/i, 'c') 
-			result.gsub!(/ñ/i, 'n') 
-		# Remove anything non-ASCII entirely (e.g. diacritics).
-			result.gsub!(/[^\x00-\x7F]+/, '') 
-		# Remove unwanted chars.
-      result.gsub!(/[^\w_ \-]+/i,   '') 
-		# No more than one of the separator in a row.
-      result.gsub!(/[ \-]+/i,      '-') 
-		# Remove leading/trailing separator.
-      result.gsub!(/^\-|\-$/i,      '') 
       result.size.zero? ? random_permalink(string) : result
     rescue
       random_permalink(string)
